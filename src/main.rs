@@ -27,6 +27,47 @@ struct Lexer {
 }
 
 impl Lexer {
+    fn read_number(&mut self) -> f64 {
+        let mut s = String::new();
+
+        // optional minus sign
+        if let Some(b'-') = self.current() {
+            s.push('-');
+            self.advance();
+        }
+
+        // integer part
+        loop {
+            match self.current() {
+                Some(c @ b'0'..=b'9') => {
+                    s.push(c as char);
+                    self.advance();
+                }
+                _ => break,
+            }
+        }
+
+        // optional decimal part
+        if let Some(b'.') = self.current() {
+            s.push('.');
+            self.advance();
+
+            loop {
+                match self.current() {
+                    Some(c @ b'0'..=b'9') => {
+                        s.push(c as char);
+                        self.advance();
+                    }
+                    _ => break,
+                }
+            }
+        }
+
+        s.parse::<f64>()
+            .unwrap_or_else(|_| panic!("Invalid number: {}", s))
+    }
+}
+impl Lexer {
     fn new(input: &str) -> Lexer {
         Lexer {
             input: input.as_bytes().to_vec(),
