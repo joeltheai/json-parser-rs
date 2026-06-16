@@ -341,6 +341,54 @@ impl Parser {
         }
     }
 }
+
+impl Parser {
+    fn parse_object(&mut self) -> JsonValue {
+        self.advance(); // consume '{'
+
+        let mut pairs: Vec<(String, JsonValue)> = Vec::new();
+
+        // handle empty object
+        if let Token::RightBrace = self.current() {
+            self.advance();
+            return JsonValue::Object(pairs);
+        }
+
+        loop {
+            // parse the key, must be a string
+            let key = match self.expect("object key") {
+                Token::StringToken(s) => s.clone(),
+                other => panic!("Expected string key, got something else"),
+            };
+
+            // consume the colon
+            match self.expect("colon") {
+                Token::Colon => {}
+                _ => panic!("Expected ':' after object key"),
+            }
+
+            // parse the value, recursive call
+            let value = self.parse_value();
+
+            pairs.push((key, value));
+
+            // after a pair, expect either ',' or '}'
+            match self.current() {
+                Token::Comma => {
+                    self.advance(); // consume comma, loop for next pair
+                }
+                Token::RightBrace => {
+                    self.advance(); // consume '}', we're done
+                    break;
+                }
+                _ => panic!("Expected ',' or '}}' in object"),
+            }
+        }
+
+        JsonValue::Object(pairs)
+    }
+}
+
 fn parse(tokens: &[Token]) -> JsonValue {
     todo!()
 }
