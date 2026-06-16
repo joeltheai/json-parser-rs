@@ -306,6 +306,41 @@ impl Parser {
         }
     }
 }
+
+impl Parser {
+    fn parse_value(&mut self) -> JsonValue {
+        match self.current() {
+            Token::LeftBrace => self.parse_object(),
+            Token::LeftBracket => self.parse_array(),
+            Token::True => {
+                self.advance();
+                JsonValue::Bool(true)
+            }
+            Token::False => {
+                self.advance();
+                JsonValue::Bool(false)
+            }
+            Token::Null => {
+                self.advance();
+                JsonValue::Null
+            }
+            Token::NumberToken(n) => {
+                let value = *n;
+                self.advance();
+                JsonValue::Number(value)
+            }
+            Token::StringToken(s) => {
+                let value = s.clone();
+                self.advance();
+                JsonValue::Str(value)
+            }
+            Token::RightBrace => panic!("Unexpected '}'"),
+            Token::RightBracket => panic!("Unexpected ']'"),
+            Token::Colon => panic!("Unexpected ':'"),
+            Token::Comma => panic!("Unexpected ','"),
+        }
+    }
+}
 fn parse(tokens: &[Token]) -> JsonValue {
     todo!()
 }
