@@ -71,6 +71,99 @@ impl Lexer {
     }
 }
 
+impl Lexer {
+    fn read_string(&mut self) -> String {
+        // consume the opening "
+        self.advance();
+
+        let mut result = String::new();
+
+        loop {
+            match self.current() {
+                None => panic!("Unterminated string"),
+
+                Some(b'"') => {
+                    self.advance(); // consume closing "
+                    return result;
+                }
+
+                Some(b'\\') => {
+                    self.advance(); // consume the backslash
+                    match self.current() {
+                        Some(b'"') => {
+                            result.push('"');
+                            self.advance();
+                        }
+                        Some(b'\\') => {
+                            result.push('\\');
+                            self.advance();
+                        }
+                        Some(b'/') => {
+                            result.push('/');
+                            self.advance();
+                        }
+                        Some(b'n') => {
+                            result.push('\n');
+                            self.advance();
+                        }
+                        Some(b't') => {
+                            result.push('\t');
+                            self.advance();
+                        }
+                        Some(b'r') => {
+                            result.push('\r');
+                            self.advance();
+                        }
+                        Some(b'b') => {
+                            result.push('\x08');
+                            self.advance();
+                        }
+                        Some(b'f') => {
+                            result.push('\x0C');
+                            self.advance();
+                        }
+                        Some(b'u') => {
+                            self.advance(); // consume 'u'
+                            let codepoint = self.read_unicode_escape();
+                            let ch = char::from_u32(codepoint).unwrap_or_else(|| {
+                                panic!("Invalid unicode codepoint: {}", codepoint)
+                            });
+                            result.push(ch);
+                        }
+                        Some(c) => panic!("Invalid escape sequence: \\{}", c as char),
+                        None => panic!("Unterminated escape sequence"),
+                    }
+                }
+
+                Some(c) => {
+                    result.push(c as char);
+                    self.advance();
+                }
+            }
+        }
+    }
+
+    fn read_unicode_escape(&mut self) -> u32 {
+        let mut value: u32 = 0;
+        for _ in 0..4 {
+            match self.current() {
+                Some(c) => {
+                    let digit = match c {
+                        b'0'..=b'9' => (c - b'0') as u32,
+                        b'a'..=b'f' => (c - b'a' + 10) as u32,
+                        b'A'..=b'F' => (c - b'A' + 10) as u32,
+                        _ => panic!("Invalid hex digit in unicode escape: {}", c as char),
+                    };
+                    value = value * 16 + digit;
+                    self.advance();
+                }
+                None => panic!("Unterminated unicode escape"),
+            }
+        }
+        value
+    }
+}
+
 fn tokenize(input: &str) -> Vec<Token> {
     let mut lexer = Lexer::new(input);
     let mut tokens = Vec::new();
