@@ -21,6 +21,40 @@ enum JsonValue {
     Null,
 }
 
+struct Lexer {
+    input: Vec<u8>,
+    pos: usize,
+}
+
+impl Lexer {
+    fn new(input: &str) -> Lexer {
+        Lexer {
+            input: input.as_bytes().to_vec(),
+            pos: 0,
+        }
+    }
+
+    fn current(&self) -> Option<u8> {
+        if self.pos < self.input.len() {
+            Some(self.input[self.pos])
+        } else {
+            None
+        }
+    }
+
+    fn advance(&mut self) {
+        self.pos += 1;
+    }
+
+    fn peek(&self) -> Option<u8> {
+        if self.pos + 1 < self.input.len() {
+            Some(self.input[self.pos + 1])
+        } else {
+            None
+        }
+    }
+}
+
 fn tokenize(input: &str) -> Vec<Token> {
     todo!()
 }
