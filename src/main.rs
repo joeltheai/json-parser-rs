@@ -273,6 +273,39 @@ fn tokenize(input: &str) -> Vec<Token> {
 
     tokens
 }
+
+struct Parser {
+    tokens: Vec<Token>,
+    pos: usize,
+}
+
+impl Parser {
+    fn new(tokens: Vec<Token>) -> Parser {
+        Parser { tokens, pos: 0 }
+    }
+
+    fn current(&self) -> &Token {
+        if self.pos < self.tokens.len() {
+            &self.tokens[self.pos]
+        } else {
+            panic!("Unexpected end of token stream");
+        }
+    }
+
+    fn advance(&mut self) {
+        self.pos += 1;
+    }
+
+    fn expect(&mut self, description: &str) -> &Token {
+        if self.pos < self.tokens.len() {
+            let token = &self.tokens[self.pos];
+            self.pos += 1;
+            token
+        } else {
+            panic!("Expected {} but reached end of input", description);
+        }
+    }
+}
 fn parse(tokens: &[Token]) -> JsonValue {
     todo!()
 }
